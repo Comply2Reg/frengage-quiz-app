@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import Link from 'next/link';
 import '@/lib/fontawesome';
 
 interface QuizResultsProps {
@@ -13,7 +12,6 @@ interface QuizResultsProps {
   difficulty: string;
   timeSpent: number;
   rank: number;
-  totalPlayers: number;
   streak: number;
   onPlayAgain: () => void;
   onViewScheduled: () => void;
@@ -28,7 +26,6 @@ export default function QuizResults({
   difficulty,
   timeSpent,
   rank,
-  totalPlayers,
   streak,
   onPlayAgain,
   onViewScheduled,
@@ -43,7 +40,6 @@ export default function QuizResults({
   }, []);
 
   const percentage = Math.round((correctAnswers / totalQuestions) * 100);
-  const performance = percentage >= 90 ? 'Excellent' : percentage >= 70 ? 'Good' : percentage >= 50 ? 'Fair' : 'Needs Improvement';
   
   const getPerformanceColor = () => {
     if (percentage >= 90) return 'text-green-400';

@@ -10,20 +10,45 @@ import QuizResults from '@/components/QuizResults';
 import AdminMonitor from '@/components/AdminMonitor';
 import '@/lib/fontawesome';
 
+// Type definitions
+interface Quiz {
+  id: string;
+  title: string;
+  theme: string;
+  difficulty: string;
+  participants: number;
+  duration: number;
+  prize: string;
+  status: 'live' | 'upcoming' | 'ended';
+  date: string;
+  time: string;
+}
+
+interface QuizQuestion {
+  id: number;
+  text: string;
+  options: string[];
+  correctAnswer: number;
+  category: string;
+  difficulty: 'Easy' | 'Medium' | 'Hard';
+  points: number;
+  timeLimit: number;
+  funFact: string;
+}
+
 export default function Scheduled() {
   const [isWaitingModalOpen, setIsWaitingModalOpen] = useState(false);
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 1, minutes: 14, seconds: 30 });
   const [selectedQuiz, setSelectedQuiz] = useState<string | null>(null);
   const [isQuizActive, setIsQuizActive] = useState(false);
-  const [currentQuiz, setCurrentQuiz] = useState<any>(null);
+  const [currentQuiz, setCurrentQuiz] = useState<Quiz | null>(null);
   const [quizState, setQuizState] = useState<'question' | 'feedback' | 'results'>('question');
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [quizQuestions, setQuizQuestions] = useState<any[]>([]);
+  const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
   const [userAnswers, setUserAnswers] = useState<number[]>([]);
-  const [userScores, setUserScores] = useState<number[]>([]);
   const [totalScore, setTotalScore] = useState(0);
   const [quizStartTime, setQuizStartTime] = useState(Date.now());
-  const [lastAnswer, setLastAnswer] = useState<any>(null);
+  const [lastAnswer, setLastAnswer] = useState<{isCorrect: boolean, selected: number, correct: number, points: number} | null>(null);
 
   // Quiz data for different themes
   const quizData = {
@@ -162,7 +187,7 @@ export default function Scheduled() {
 
   const quizCards = [
     { 
-      id: 1,
+      id: '1',
       bgColor: 'bg-gradient-to-br from-indigo-500 to-indigo-700', 
       title: 'Space Exploration Mastery', 
       theme: 'Astronomy & Space', 
@@ -171,11 +196,11 @@ export default function Scheduled() {
       participants: 1247,
       difficulty: 'Hard',
       prize: '₹5,000',
-      status: 'live',
-      duration: '30 min'
+      status: 'live' as const,
+      duration: 30
     },
     { 
-      id: 2,
+      id: '2',
       bgColor: 'bg-gradient-to-br from-slate-500 to-slate-700', 
       title: 'Tech Innovation Challenge', 
       theme: 'Technology & AI', 
@@ -184,11 +209,11 @@ export default function Scheduled() {
       participants: 892,
       difficulty: 'Medium',
       prize: '₹3,000',
-      status: 'upcoming',
-      duration: '25 min'
+      status: 'upcoming' as const,
+      duration: 25
     },
     { 
-      id: 3,
+      id: '3',
       bgColor: 'bg-gradient-to-br from-purple-600 to-purple-900', 
       title: 'History Buffs Unite', 
       theme: 'World History', 
@@ -197,11 +222,11 @@ export default function Scheduled() {
       participants: 2156,
       difficulty: 'Easy',
       prize: '₹2,500',
-      status: 'upcoming',
-      duration: '20 min'
+      status: 'upcoming' as const,
+      duration: 20
     },
     { 
-      id: 4,
+      id: '4',
       bgColor: 'bg-gradient-to-br from-fuchsia-500 to-fuchsia-700', 
       title: 'Sports Legends Quiz', 
       theme: 'Sports & Athletics', 
@@ -210,11 +235,11 @@ export default function Scheduled() {
       participants: 1834,
       difficulty: 'Medium',
       prize: '₹4,000',
-      status: 'upcoming',
-      duration: '35 min'
+      status: 'upcoming' as const,
+      duration: 35
     },
     { 
-      id: 5,
+      id: '5',
       bgColor: 'bg-gradient-to-br from-pink-500 to-pink-700', 
       title: 'Pop Culture Frenzy', 
       theme: 'Entertainment', 
@@ -223,7 +248,7 @@ export default function Scheduled() {
       participants: 3456,
       difficulty: 'Easy',
       prize: '₹1,500',
-      status: 'upcoming',
+      status: 'upcoming' as const,
       duration: '15 min'
     },
     { 
@@ -236,7 +261,7 @@ export default function Scheduled() {
       participants: 987,
       difficulty: 'Hard',
       prize: '₹6,000',
-      status: 'upcoming',
+      status: 'upcoming' as const,
       duration: '40 min'
     },
     { 
@@ -249,8 +274,8 @@ export default function Scheduled() {
       participants: 2789,
       difficulty: 'Medium',
       prize: '₹3,500',
-      status: 'upcoming',
-      duration: '25 min'
+      status: 'upcoming' as const,
+      duration: 25
     },
     { 
       id: 8,
@@ -262,7 +287,7 @@ export default function Scheduled() {
       participants: 1456,
       difficulty: 'Hard',
       prize: '₹7,500',
-      status: 'upcoming',
+      status: 'upcoming' as const,
       duration: '45 min'
     },
   ];
@@ -307,7 +332,7 @@ export default function Scheduled() {
   };
 
   // Quiz functions
-  const startQuiz = (quiz: any) => {
+  const startQuiz = (quiz: Quiz) => {
     console.log('Starting quiz:', quiz);
     const questions = quizData[quiz.theme as keyof typeof quizData] || [];
     console.log('Questions found:', questions);
@@ -318,10 +343,9 @@ export default function Scheduled() {
     }
     
     setCurrentQuiz(quiz);
-    setQuizQuestions(questions);
+    setQuizQuestions(questions as QuizQuestion[]);
     setCurrentQuestionIndex(0);
     setUserAnswers([]);
-    setUserScores([]);
     setTotalScore(0);
     setQuizStartTime(Date.now());
     setQuizState('question');
@@ -341,7 +365,6 @@ export default function Scheduled() {
     const points = isCorrect ? Math.max(1, question.points - Math.floor(timeSpent / 5)) : 0;
     
     setUserAnswers(prev => [...prev, selectedOption]);
-    setUserScores(prev => [...prev, points]);
     setTotalScore(prev => prev + points);
     
     setLastAnswer({
@@ -354,13 +377,15 @@ export default function Scheduled() {
     setQuizState('feedback');
     
     // Notify admin of answer
-    notifyAdmin('answer_submitted', { 
-      quizId: currentQuiz.id, 
-      questionId: question.id, 
-      selectedOption, 
-      isCorrect, 
-      points 
-    });
+    if (currentQuiz) {
+      notifyAdmin('answer_submitted', { 
+        quizId: currentQuiz.id, 
+        questionId: question.id, 
+        selectedOption, 
+        isCorrect, 
+        points 
+      });
+    }
   };
 
   const handleQuizNext = () => {
@@ -370,19 +395,23 @@ export default function Scheduled() {
     } else {
       setQuizState('results');
       // Notify admin of quiz completion
-      notifyAdmin('quiz_completed', { 
-        quizId: currentQuiz.id, 
-        totalScore, 
-        correctAnswers: userAnswers.filter((answer, index) => 
-          answer === quizQuestions[index].correctAnswer
-        ).length,
-        totalQuestions: quizQuestions.length
-      });
+      if (currentQuiz) {
+        notifyAdmin('quiz_completed', { 
+          quizId: currentQuiz.id, 
+          totalScore, 
+          correctAnswers: userAnswers.filter((answer, index) => 
+            answer === quizQuestions[index].correctAnswer
+          ).length,
+          totalQuestions: quizQuestions.length
+        });
+      }
     }
   };
 
   const handleQuizPlayAgain = () => {
-    startQuiz(currentQuiz);
+    if (currentQuiz) {
+      startQuiz(currentQuiz);
+    }
   };
 
   const handleQuizExit = () => {
@@ -392,7 +421,6 @@ export default function Scheduled() {
     setCurrentQuestionIndex(0);
     setQuizQuestions([]);
     setUserAnswers([]);
-    setUserScores([]);
     setTotalScore(0);
     setLastAnswer(null);
   };
@@ -407,7 +435,7 @@ export default function Scheduled() {
   };
 
   // Admin notification function (placeholder for real implementation)
-  const notifyAdmin = (event: string, data: any) => {
+  const notifyAdmin = (event: string, data: Record<string, unknown>) => {
     // This would send real-time updates to admin dashboard
     console.log('Admin Notification:', event, data);
     
@@ -473,7 +501,6 @@ export default function Scheduled() {
           difficulty={currentQuiz.difficulty}
           timeSpent={timeSpent}
           rank={rank}
-          totalPlayers={1000 + Math.floor(Math.random() * 9000)}
           streak={streak}
           onPlayAgain={handleQuizPlayAgain}
           onViewScheduled={handleViewScheduled}
@@ -502,11 +529,17 @@ export default function Scheduled() {
             <button 
               onClick={() => {
                 console.log('Test button clicked');
-                const testQuiz = {
-                  id: 999,
+                const testQuiz: Quiz = {
+                  id: '999',
                   title: 'Test Quiz',
                   theme: 'Astronomy & Space',
-                  difficulty: 'Easy'
+                  difficulty: 'Easy',
+                  participants: 100,
+                  duration: 10,
+                  prize: '₹500',
+                  status: 'live' as const,
+                  date: 'Today',
+                  time: 'Now'
                 };
                 startQuiz(testQuiz);
               }}
@@ -591,7 +624,7 @@ export default function Scheduled() {
                     </div>
                     <div className="flex items-center">
                       <FontAwesomeIcon icon="clock" className="mr-1.5 text-green-300 w-3 h-3" />
-                      <span className="font-medium">{quiz.duration}</span>
+                      <span className="font-medium">{quiz.duration} min</span>
                     </div>
                   </div>
                 </div>

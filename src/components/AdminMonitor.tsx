@@ -8,7 +8,7 @@ interface AdminEvent {
   id: string;
   timestamp: Date;
   event: string;
-  data: any;
+  data: Record<string, unknown>;
   userId: string;
 }
 
@@ -97,12 +97,12 @@ export default function AdminMonitor() {
                 <p className="text-gray-300 text-xs truncate">
                   User: {event.userId}
                 </p>
-                {event.data.quizTitle && (
+                {typeof event.data.quizTitle === 'string' && event.data.quizTitle && (
                   <p className="text-gray-300 text-xs truncate">
                     Quiz: {event.data.quizTitle}
                   </p>
                 )}
-                {event.data.isCorrect !== undefined && (
+                {typeof event.data.isCorrect === 'boolean' && (
                   <p className={`text-xs ${event.data.isCorrect ? 'text-green-400' : 'text-red-400'}`}>
                     {event.data.isCorrect ? 'Correct' : 'Incorrect'}
                   </p>

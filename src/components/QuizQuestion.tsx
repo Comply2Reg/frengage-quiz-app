@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import '@/lib/fontawesome';
 
@@ -32,7 +32,17 @@ export default function QuizQuestion({
   const [timeLeft, setTimeLeft] = useState(question.timeLimit);
   const [isAnswered, setIsAnswered] = useState(false);
   const [showCorrectAnswer, setShowCorrectAnswer] = useState(false);
-  const [startTime, setStartTime] = useState(Date.now());
+
+  const handleAnswer = useCallback((optionIndex: number) => {
+    if (isAnswered) return;
+    
+    setSelectedOption(optionIndex);
+    setIsAnswered(true);
+    setShowCorrectAnswer(true);
+    
+    const timeSpent = question.timeLimit - timeLeft;
+    onAnswer(optionIndex, timeSpent);
+  }, [isAnswered, question.timeLimit, timeLeft, onAnswer]);
 
   // Timer effect
   useEffect(() => {
@@ -42,25 +52,13 @@ export default function QuizQuestion({
     } else if (timeLeft === 0 && !isAnswered) {
       handleAnswer(-1); // Time's up
     }
-  }, [timeLeft, isAnswered]);
-
-  const handleAnswer = (optionIndex: number) => {
-    if (isAnswered) return;
-    
-    setSelectedOption(optionIndex);
-    setIsAnswered(true);
-    setShowCorrectAnswer(true);
-    
-    const timeSpent = question.timeLimit - timeLeft;
-    onAnswer(optionIndex, timeSpent);
-  };
+  }, [timeLeft, isAnswered, handleAnswer]);
 
   const handleNext = () => {
     setSelectedOption(null);
     setIsAnswered(false);
     setShowCorrectAnswer(false);
     setTimeLeft(question.timeLimit);
-    setStartTime(Date.now());
     onNext();
   };
 
@@ -195,8 +193,8 @@ export default function QuizQuestion({
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-zinc-800 rounded-2xl p-6 text-center max-w-sm">
               <FontAwesomeIcon icon="clock" className="text-4xl text-red-500 mb-4" />
-              <h3 className="text-xl font-bold text-white mb-2">Time's Up!</h3>
-              <p className="text-gray-300 mb-4">You didn't answer in time.</p>
+              <h3 className="text-xl font-bold text-white mb-2">Time&apos;s Up!</h3>
+              <p className="text-gray-300 mb-4">You didn&apos;t answer in time.</p>
               <button 
                 onClick={handleNext}
                 className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
